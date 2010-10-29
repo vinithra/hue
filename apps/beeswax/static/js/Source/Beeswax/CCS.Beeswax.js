@@ -17,7 +17,7 @@
 ---
 description: Beeswax (the Hive UI)
 provides: [CCS.Beeswax]
-requires: [ccs-shared/CCS.JBrowser, clientcide/TabSwapper, More/Form.Validator.Inline, ccs-shared/DynamicTextarea, ccs-shared/CCS.JFrame.Chooser]
+requires: [ccs-shared/CCS.JBrowser, clientcide/TabSwapper, More/Form.Validator.Inline, ccs-shared/DynamicTextarea, ccs-shared/CCS.JFrame.Chooser, ccs-shared/HueChart.Line]
 script: CCS.Beeswax.js
 
 ...
@@ -136,7 +136,34 @@ ART.Sheet.define('splitview.bw-editor', {
                                                         if (getValidator(form).validate()) tabs.show(i+1);
                                                 });
                                         });
-                                }
+                                },
+								LineChart: function(element, methods) {
+									var visElement = new Element('div').inject(element);
+									var horizontalOther = 0;
+									var verticalOther = 0;
+									var dataTable = element.get('data', 'chart-data');
+									var xField = element.get('data', 'chart-x');
+									var yField = element.get('data', 'chart-y');
+									var xIsDate = false;
+									var newChart = new HueChart.Line(visElement, {
+											width: methods.getContainerSize().x - (3 + horizontalOther),
+											height: methods.getContainerSize().y - (3 + verticalOther),
+											dataTable: element.getElement(dataTable),
+											bottomPadding: 35,
+											topPadding: 20,
+											leftPadding: 70,
+											rightPadding: 20,
+											series: element.get('data', 'chart-series', true),
+											xField: xField,
+											yField: yField,
+											xIsDate: xIsDate,
+											positionIndicator: true,
+											ticks: true,
+											labels: true,
+											xLabel: 'x-axis'
+										});
+									newChart.render()
+								}
                         });
                         this.jframe.addBehaviorPlugin('SelectWithOther', 'SelectWithOtherValidation', function(element, methods) {
                                 //adds validation upon hiding the 'other' field

@@ -30,6 +30,7 @@ ${wrappers.head("Beeswax: Query Results", section='query')}
               <ul>
                 <li><a target="_blank" href="${download_urls["csv"]}" class="bw-download_csv">Download as CSV</a>
                 <li><a target="_blank" href="${download_urls["xls"]}" class="bw-download_xls">Download as XLS</a>
+				<li><a href="${url('beeswax.views.chart', query.id)}">Chart</a>
                 <li data-filters="CollapsingElements"><a class="bw-save collapser jframe_ignore" href="${url('beeswax.views.save_results', query.id)}">Save</a>
                   <div class="collapsible ccs-hidden bw-save_query_results" style="display:none" data-filters="Accordion"> 
                     <form action="${url('beeswax.views.save_results', query.id) }" method="POST">

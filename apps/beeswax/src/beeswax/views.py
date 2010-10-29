@@ -616,6 +616,24 @@ def download(request, id, format):
   return data_export.download(query_history, format)
 
 
+def chart(request, id):
+  id = int(id)
+  query_history = models.QueryHistory.objects.get(id=id)
+  LOG.debug('Chart results for query %s: [ %s ]' %
+      (query_history.server_id, query_history.query))
+  handle = QueryHandle(query_history.server_id, query_history.log_context)
+  _DATA_WAIT_SLEEP = 0.1
+  is_first_row = True
+  next_row = 0
+  results = None
+  # Make sure that we have the next batch of ready results
+  while results is None or not results.ready:
+    results = db_utils.db_client().fetch(handle, start_over=is_first_row)
+    if not results.ready:
+      time.sleep(_DATA_WAIT_SLEEP)
+
+  return render('display_chart.mako', request, {'results':results})
+
 @login_notrequired
 def query_done_cb(request, server_id):
   """
