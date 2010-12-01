@@ -473,6 +473,10 @@ service Jobtracker extends common.HadoopServiceBase {
 
   /** Get an MR delegation token. */
   common.ThriftDelegationToken getDelegationToken(10:common.RequestContext ctx, 1:string renewer) throws(1: common.IOException err)
+
+  string getPropertyValue(1:string property)
+
+  void setPropertyValue(1: string property, 2: string value)
 }
 
 

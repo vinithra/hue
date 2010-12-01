@@ -35,6 +35,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Comment;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+//import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
@@ -649,7 +662,16 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
 
     private JobTracker jobTracker = null;
 
+    static {
+      Configuration.addDefaultResource("mapred-queue-acls.xml");
+      Configuration.addDefaultResource("mapred-site.xml");
+    }
+
     private Configuration conf;
+
+    public static final String MAPREDUCE_JOB_ACL_VIEW_JOB = "mapreduce.job.acl-view-job";
+    public static final String MAPREDUCE_JOB_ACL_MODIFY_JOB = "mapreduce.job.acl-modify-job";
+    public static final String MAPRED_ACLS_ENABLED = "mapred.acls.enabled";
 
     private ThriftPluginServer thriftServer;
 
@@ -1241,6 +1263,59 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
               return ThriftUtils.toThrift(delegationToken, JobTracker.getAddress(conf));
             }
           });
+        }
+
+        public String getPropertyValue(String property) {
+          return conf.get(property, " ");
+        }
+
+        public void setPropertyValue(String property, String value) {
+          conf.set(property, value);
+          conf.reloadConfiguration();
+
+          String resource;
+          if (property.equals(MAPRED_ACLS_ENABLED) || property.equals(MAPREDUCE_JOB_ACL_MODIFY_JOB) || property.equals(MAPREDUCE_JOB_ACL_VIEW_JOB)) {
+            resource = "mapred-job-acls.xml";
+          } else if (property.contains("mapred.queue") && (property.contains("acl-administer-job") || property.contains("acl-submit-job"))) {
+            resource = "mapred-queue-acls.xml";
+          } else {
+            throw new RuntimeException("No resource found for property " + property);
+          }
+
+          try {
+            DocumentBuilderFactory docBuilderFactory
+              = DocumentBuilderFactory.newInstance();
+            //ignore all comments inside the xml file
+            docBuilderFactory.setIgnoringComments(true);
+
+            //allow includes in the xml file
+            docBuilderFactory.setNamespaceAware(true);
+            try {
+                docBuilderFactory.setXIncludeAware(true);
+            } catch (UnsupportedOperationException e) {
+              LOG.error("Failed to set setXIncludeAware(true) for parser "
+                      + docBuilderFactory
+                      + ":" + e,
+                      e);
+            }
+            DocumentBuilder builder = docBuilderFactory.newDocumentBuilder();
+            Document doc = null;
+            Element root = null;
+
+
+          } catch (IOException e) {
+            LOG.fatal("error parsing conf file: " + e);
+            throw new RuntimeException(e);
+          } catch (DOMException e) {
+            LOG.fatal("error parsing conf file: " + e);
+            throw new RuntimeException(e);
+          } catch (SAXException e) {
+            LOG.fatal("error parsing conf file: " + e);
+            throw new RuntimeException(e);
+          } catch (ParserConfigurationException e) {
+            LOG.fatal("error parsing conf file: " + e);
+            throw new RuntimeException(e);
+          }
         }
     }
 

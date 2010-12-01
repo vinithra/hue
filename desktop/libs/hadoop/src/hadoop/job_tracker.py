@@ -382,3 +382,9 @@ class LiveJobTracker(object):
     # TODO(atm): The second argument here should really be the Hue kerberos
     # principal, which doesn't exist yet. Todd's working on that.
     return self.client.getDelegationToken(self.thread_local.request_context, 'hadoop')
+
+  def get_property_value(self, property):
+    return self.client.getPropertyValue(property)
+
+  def set_property_value(self, property, value):
+    return self.client.setPropertyValue(property, value)
