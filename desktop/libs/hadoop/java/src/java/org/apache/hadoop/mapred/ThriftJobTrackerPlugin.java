@@ -1330,6 +1330,9 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
             NodeList props = root.getChildNodes();
             for (int i = 0; i < props.getLength(); i++) {
               Node propNode = props.item(i);
+              if (!(propNode instanceof Element))
+                continue;
+
               Element prop = (Element)propNode;
               if (!"property".equals(prop.getTagName())) {
                 LOG.warn("bad conf file: element not <property>");
@@ -1337,11 +1340,13 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
               }
 
               Node nodeName = prop.getElementsByTagName("name").item(0);
-              if (((Element)nodeName).getNodeValue().equals(propertyName)) {
+              LOG.info("nodeName value:"+((Element)nodeName).getTextContent());
+              if (((Element)nodeName).getTextContent().equals(propertyName)) {
                 Node nodeValue = prop.getElementsByTagName("value").item(0);
                 Node newNodeValue = doc.createElement("value");
-                newNodeValue.setNodeValue(value);
+                newNodeValue.setTextContent(value);
                 propNode.replaceChild(newNodeValue, nodeValue);
+                LOG.info("Replacing value of property " + propertyName + " from " + nodeValue.getTextContent() + " to " + value);
                 writeDOMToFile(doc, url);
                 return;
               }
@@ -1385,6 +1390,7 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
 
         // Write the DOM document to the file
         Transformer xformer = TransformerFactory.newInstance().newTransformer();
+        LOG.info("Writing out new configs to file: " + url.getPath());
         xformer.transform(source, result);
       } catch (TransformerException e) {
         LOG.fatal("error writing DOM to conf file: " + e);
