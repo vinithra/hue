@@ -221,6 +221,10 @@ public class Jobtracker {
      */
     public org.apache.hadoop.thriftfs.api.ThriftDelegationToken getDelegationToken(org.apache.hadoop.thriftfs.api.RequestContext ctx, String renewer) throws org.apache.hadoop.thriftfs.api.IOException, TException;
 
+    public String getPropertyValue(String property) throws TException;
+
+    public void setPropertyValue(String property, String value) throws TException;
+
   }
 
   public interface AsyncIface extends org.apache.hadoop.thriftfs.api.HadoopServiceBase .AsyncIface {
@@ -272,6 +276,10 @@ public class Jobtracker {
     public void setJobPriority(org.apache.hadoop.thriftfs.api.RequestContext ctx, ThriftJobID jobID, ThriftJobPriority priority, AsyncMethodCallback<AsyncClient.setJobPriority_call> resultHandler) throws TException;
 
     public void getDelegationToken(org.apache.hadoop.thriftfs.api.RequestContext ctx, String renewer, AsyncMethodCallback<AsyncClient.getDelegationToken_call> resultHandler) throws TException;
+
+    public void getPropertyValue(String property, AsyncMethodCallback<AsyncClient.getPropertyValue_call> resultHandler) throws TException;
+
+    public void setPropertyValue(String property, String value, AsyncMethodCallback<AsyncClient.setPropertyValue_call> resultHandler) throws TException;
 
   }
 
@@ -1220,6 +1228,76 @@ public class Jobtracker {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "getDelegationToken failed: unknown result");
     }
 
+    public String getPropertyValue(String property) throws TException
+    {
+      send_getPropertyValue(property);
+      return recv_getPropertyValue();
+    }
+
+    public void send_getPropertyValue(String property) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("getPropertyValue", TMessageType.CALL, ++seqid_));
+      getPropertyValue_args args = new getPropertyValue_args();
+      args.setProperty(property);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public String recv_getPropertyValue() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "getPropertyValue failed: out of sequence response");
+      }
+      getPropertyValue_result result = new getPropertyValue_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      throw new TApplicationException(TApplicationException.MISSING_RESULT, "getPropertyValue failed: unknown result");
+    }
+
+    public void setPropertyValue(String property, String value) throws TException
+    {
+      send_setPropertyValue(property, value);
+      recv_setPropertyValue();
+    }
+
+    public void send_setPropertyValue(String property, String value) throws TException
+    {
+      oprot_.writeMessageBegin(new TMessage("setPropertyValue", TMessageType.CALL, ++seqid_));
+      setPropertyValue_args args = new setPropertyValue_args();
+      args.setProperty(property);
+      args.setValue(value);
+      args.write(oprot_);
+      oprot_.writeMessageEnd();
+      oprot_.getTransport().flush();
+    }
+
+    public void recv_setPropertyValue() throws TException
+    {
+      TMessage msg = iprot_.readMessageBegin();
+      if (msg.type == TMessageType.EXCEPTION) {
+        TApplicationException x = TApplicationException.read(iprot_);
+        iprot_.readMessageEnd();
+        throw x;
+      }
+      if (msg.seqid != seqid_) {
+        throw new TApplicationException(TApplicationException.BAD_SEQUENCE_ID, "setPropertyValue failed: out of sequence response");
+      }
+      setPropertyValue_result result = new setPropertyValue_result();
+      result.read(iprot_);
+      iprot_.readMessageEnd();
+      return;
+    }
+
   }
   public static class AsyncClient extends org.apache.hadoop.thriftfs.api.HadoopServiceBase.AsyncClient implements AsyncIface {
     public static class Factory implements TAsyncClientFactory<AsyncClient> {
@@ -2036,6 +2114,71 @@ public class Jobtracker {
       }
     }
 
+    public void getPropertyValue(String property, AsyncMethodCallback<getPropertyValue_call> resultHandler) throws TException {
+      checkReady();
+      getPropertyValue_call method_call = new getPropertyValue_call(property, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class getPropertyValue_call extends TAsyncMethodCall {
+      private String property;
+      public getPropertyValue_call(String property, AsyncMethodCallback<getPropertyValue_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.property = property;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("getPropertyValue", TMessageType.CALL, 0));
+        getPropertyValue_args args = new getPropertyValue_args();
+        args.setProperty(property);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public String getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_getPropertyValue();
+      }
+    }
+
+    public void setPropertyValue(String property, String value, AsyncMethodCallback<setPropertyValue_call> resultHandler) throws TException {
+      checkReady();
+      setPropertyValue_call method_call = new setPropertyValue_call(property, value, resultHandler, this, protocolFactory, transport);
+      manager.call(method_call);
+    }
+
+    public static class setPropertyValue_call extends TAsyncMethodCall {
+      private String property;
+      private String value;
+      public setPropertyValue_call(String property, String value, AsyncMethodCallback<setPropertyValue_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.property = property;
+        this.value = value;
+      }
+
+      public void write_args(TProtocol prot) throws TException {
+        prot.writeMessageBegin(new TMessage("setPropertyValue", TMessageType.CALL, 0));
+        setPropertyValue_args args = new setPropertyValue_args();
+        args.setProperty(property);
+        args.setValue(value);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public void getResult() throws TException {
+        if (getState() != State.RESPONSE_READ) {
+          throw new IllegalStateException("Method call not finished!");
+        }
+        TMemoryInputTransport memoryTransport = new TMemoryInputTransport(getFrameBuffer().array());
+        TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        (new Client(prot)).recv_setPropertyValue();
+      }
+    }
+
   }
 
   public static class Processor extends org.apache.hadoop.thriftfs.api.HadoopServiceBase.Processor implements TProcessor {
@@ -2068,6 +2211,8 @@ public class Jobtracker {
       processMap_.put("killTaskAttempt", new killTaskAttempt());
       processMap_.put("setJobPriority", new setJobPriority());
       processMap_.put("getDelegationToken", new getDelegationToken());
+      processMap_.put("getPropertyValue", new getPropertyValue());
+      processMap_.put("setPropertyValue", new setPropertyValue());
     }
 
     private Iface iface_;
@@ -2862,6 +3007,58 @@ public class Jobtracker {
           return;
         }
         oprot.writeMessageBegin(new TMessage("getDelegationToken", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class getPropertyValue implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        getPropertyValue_args args = new getPropertyValue_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("getPropertyValue", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        getPropertyValue_result result = new getPropertyValue_result();
+        result.success = iface_.getPropertyValue(args.property);
+        oprot.writeMessageBegin(new TMessage("getPropertyValue", TMessageType.REPLY, seqid));
+        result.write(oprot);
+        oprot.writeMessageEnd();
+        oprot.getTransport().flush();
+      }
+
+    }
+
+    private class setPropertyValue implements ProcessFunction {
+      public void process(int seqid, TProtocol iprot, TProtocol oprot) throws TException
+      {
+        setPropertyValue_args args = new setPropertyValue_args();
+        try {
+          args.read(iprot);
+        } catch (TProtocolException e) {
+          iprot.readMessageEnd();
+          TApplicationException x = new TApplicationException(TApplicationException.PROTOCOL_ERROR, e.getMessage());
+          oprot.writeMessageBegin(new TMessage("setPropertyValue", TMessageType.EXCEPTION, seqid));
+          x.write(oprot);
+          oprot.writeMessageEnd();
+          oprot.getTransport().flush();
+          return;
+        }
+        iprot.readMessageEnd();
+        setPropertyValue_result result = new setPropertyValue_result();
+        iface_.setPropertyValue(args.property, args.value);
+        oprot.writeMessageBegin(new TMessage("setPropertyValue", TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
         oprot.getTransport().flush();
@@ -19310,6 +19507,1122 @@ public class Jobtracker {
         sb.append(this.err);
       }
       first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class getPropertyValue_args implements TBase<getPropertyValue_args, getPropertyValue_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("getPropertyValue_args");
+
+    private static final TField PROPERTY_FIELD_DESC = new TField("property", TType.STRING, (short)1);
+
+    public String property;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      PROPERTY((short)1, "property");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // PROPERTY
+            return PROPERTY;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.PROPERTY, new FieldMetaData("property", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRING)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(getPropertyValue_args.class, metaDataMap);
+    }
+
+    public getPropertyValue_args() {
+    }
+
+    public getPropertyValue_args(
+      String property)
+    {
+      this();
+      this.property = property;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public getPropertyValue_args(getPropertyValue_args other) {
+      if (other.isSetProperty()) {
+        this.property = other.property;
+      }
+    }
+
+    public getPropertyValue_args deepCopy() {
+      return new getPropertyValue_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.property = null;
+    }
+
+    public String getProperty() {
+      return this.property;
+    }
+
+    public getPropertyValue_args setProperty(String property) {
+      this.property = property;
+      return this;
+    }
+
+    public void unsetProperty() {
+      this.property = null;
+    }
+
+    /** Returns true if field property is set (has been asigned a value) and false otherwise */
+    public boolean isSetProperty() {
+      return this.property != null;
+    }
+
+    public void setPropertyIsSet(boolean value) {
+      if (!value) {
+        this.property = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case PROPERTY:
+        if (value == null) {
+          unsetProperty();
+        } else {
+          setProperty((String)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case PROPERTY:
+        return getProperty();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case PROPERTY:
+        return isSetProperty();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof getPropertyValue_args)
+        return this.equals((getPropertyValue_args)that);
+      return false;
+    }
+
+    public boolean equals(getPropertyValue_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_property = true && this.isSetProperty();
+      boolean that_present_property = true && that.isSetProperty();
+      if (this_present_property || that_present_property) {
+        if (!(this_present_property && that_present_property))
+          return false;
+        if (!this.property.equals(that.property))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(getPropertyValue_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      getPropertyValue_args typedOther = (getPropertyValue_args)other;
+
+      lastComparison = Boolean.valueOf(isSetProperty()).compareTo(typedOther.isSetProperty());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetProperty()) {
+        lastComparison = TBaseHelper.compareTo(this.property, typedOther.property);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // PROPERTY
+            if (field.type == TType.STRING) {
+              this.property = iprot.readString();
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.property != null) {
+        oprot.writeFieldBegin(PROPERTY_FIELD_DESC);
+        oprot.writeString(this.property);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("getPropertyValue_args(");
+      boolean first = true;
+
+      sb.append("property:");
+      if (this.property == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.property);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class getPropertyValue_result implements TBase<getPropertyValue_result, getPropertyValue_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("getPropertyValue_result");
+
+    private static final TField SUCCESS_FIELD_DESC = new TField("success", TType.STRING, (short)0);
+
+    public String success;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      SUCCESS((short)0, "success");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new FieldMetaData("success", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRING)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(getPropertyValue_result.class, metaDataMap);
+    }
+
+    public getPropertyValue_result() {
+    }
+
+    public getPropertyValue_result(
+      String success)
+    {
+      this();
+      this.success = success;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public getPropertyValue_result(getPropertyValue_result other) {
+      if (other.isSetSuccess()) {
+        this.success = other.success;
+      }
+    }
+
+    public getPropertyValue_result deepCopy() {
+      return new getPropertyValue_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+    }
+
+    public String getSuccess() {
+      return this.success;
+    }
+
+    public getPropertyValue_result setSuccess(String success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been asigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((String)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof getPropertyValue_result)
+        return this.equals((getPropertyValue_result)that);
+      return false;
+    }
+
+    public boolean equals(getPropertyValue_result that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(getPropertyValue_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      getPropertyValue_result typedOther = (getPropertyValue_result)other;
+
+      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(typedOther.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = TBaseHelper.compareTo(this.success, typedOther.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 0: // SUCCESS
+            if (field.type == TType.STRING) {
+              this.success = iprot.readString();
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      if (this.isSetSuccess()) {
+        oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+        oprot.writeString(this.success);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("getPropertyValue_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class setPropertyValue_args implements TBase<setPropertyValue_args, setPropertyValue_args._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("setPropertyValue_args");
+
+    private static final TField PROPERTY_FIELD_DESC = new TField("property", TType.STRING, (short)1);
+    private static final TField VALUE_FIELD_DESC = new TField("value", TType.STRING, (short)2);
+
+    public String property;
+    public String value;
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+      PROPERTY((short)1, "property"),
+      VALUE((short)2, "value");
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // PROPERTY
+            return PROPERTY;
+          case 2: // VALUE
+            return VALUE;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.PROPERTY, new FieldMetaData("property", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRING)));
+      tmpMap.put(_Fields.VALUE, new FieldMetaData("value", TFieldRequirementType.DEFAULT, 
+          new FieldValueMetaData(TType.STRING)));
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(setPropertyValue_args.class, metaDataMap);
+    }
+
+    public setPropertyValue_args() {
+    }
+
+    public setPropertyValue_args(
+      String property,
+      String value)
+    {
+      this();
+      this.property = property;
+      this.value = value;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public setPropertyValue_args(setPropertyValue_args other) {
+      if (other.isSetProperty()) {
+        this.property = other.property;
+      }
+      if (other.isSetValue()) {
+        this.value = other.value;
+      }
+    }
+
+    public setPropertyValue_args deepCopy() {
+      return new setPropertyValue_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.property = null;
+      this.value = null;
+    }
+
+    public String getProperty() {
+      return this.property;
+    }
+
+    public setPropertyValue_args setProperty(String property) {
+      this.property = property;
+      return this;
+    }
+
+    public void unsetProperty() {
+      this.property = null;
+    }
+
+    /** Returns true if field property is set (has been asigned a value) and false otherwise */
+    public boolean isSetProperty() {
+      return this.property != null;
+    }
+
+    public void setPropertyIsSet(boolean value) {
+      if (!value) {
+        this.property = null;
+      }
+    }
+
+    public String getValue() {
+      return this.value;
+    }
+
+    public setPropertyValue_args setValue(String value) {
+      this.value = value;
+      return this;
+    }
+
+    public void unsetValue() {
+      this.value = null;
+    }
+
+    /** Returns true if field value is set (has been asigned a value) and false otherwise */
+    public boolean isSetValue() {
+      return this.value != null;
+    }
+
+    public void setValueIsSet(boolean value) {
+      if (!value) {
+        this.value = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      case PROPERTY:
+        if (value == null) {
+          unsetProperty();
+        } else {
+          setProperty((String)value);
+        }
+        break;
+
+      case VALUE:
+        if (value == null) {
+          unsetValue();
+        } else {
+          setValue((String)value);
+        }
+        break;
+
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      case PROPERTY:
+        return getProperty();
+
+      case VALUE:
+        return getValue();
+
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      case PROPERTY:
+        return isSetProperty();
+      case VALUE:
+        return isSetValue();
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof setPropertyValue_args)
+        return this.equals((setPropertyValue_args)that);
+      return false;
+    }
+
+    public boolean equals(setPropertyValue_args that) {
+      if (that == null)
+        return false;
+
+      boolean this_present_property = true && this.isSetProperty();
+      boolean that_present_property = true && that.isSetProperty();
+      if (this_present_property || that_present_property) {
+        if (!(this_present_property && that_present_property))
+          return false;
+        if (!this.property.equals(that.property))
+          return false;
+      }
+
+      boolean this_present_value = true && this.isSetValue();
+      boolean that_present_value = true && that.isSetValue();
+      if (this_present_value || that_present_value) {
+        if (!(this_present_value && that_present_value))
+          return false;
+        if (!this.value.equals(that.value))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(setPropertyValue_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      setPropertyValue_args typedOther = (setPropertyValue_args)other;
+
+      lastComparison = Boolean.valueOf(isSetProperty()).compareTo(typedOther.isSetProperty());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetProperty()) {
+        lastComparison = TBaseHelper.compareTo(this.property, typedOther.property);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = Boolean.valueOf(isSetValue()).compareTo(typedOther.isSetValue());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetValue()) {
+        lastComparison = TBaseHelper.compareTo(this.value, typedOther.value);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          case 1: // PROPERTY
+            if (field.type == TType.STRING) {
+              this.property = iprot.readString();
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          case 2: // VALUE
+            if (field.type == TType.STRING) {
+              this.value = iprot.readString();
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (this.property != null) {
+        oprot.writeFieldBegin(PROPERTY_FIELD_DESC);
+        oprot.writeString(this.property);
+        oprot.writeFieldEnd();
+      }
+      if (this.value != null) {
+        oprot.writeFieldBegin(VALUE_FIELD_DESC);
+        oprot.writeString(this.value);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("setPropertyValue_args(");
+      boolean first = true;
+
+      sb.append("property:");
+      if (this.property == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.property);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("value:");
+      if (this.value == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.value);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws TException {
+      // check for required fields
+    }
+
+  }
+
+  public static class setPropertyValue_result implements TBase<setPropertyValue_result, setPropertyValue_result._Fields>, java.io.Serializable, Cloneable   {
+    private static final TStruct STRUCT_DESC = new TStruct("setPropertyValue_result");
+
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements TFieldIdEnum {
+;
+
+      private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+      static {
+        for (_Fields field : EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      public static _Fields findByName(String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final String _fieldName;
+
+      _Fields(short thriftId, String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final Map<_Fields, FieldMetaData> metaDataMap;
+    static {
+      Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      metaDataMap = Collections.unmodifiableMap(tmpMap);
+      FieldMetaData.addStructMetaDataMap(setPropertyValue_result.class, metaDataMap);
+    }
+
+    public setPropertyValue_result() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public setPropertyValue_result(setPropertyValue_result other) {
+    }
+
+    public setPropertyValue_result deepCopy() {
+      return new setPropertyValue_result(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, Object value) {
+      switch (field) {
+      }
+    }
+
+    public Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been asigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof setPropertyValue_result)
+        return this.equals((setPropertyValue_result)that);
+      return false;
+    }
+
+    public boolean equals(setPropertyValue_result that) {
+      if (that == null)
+        return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+
+    public int compareTo(setPropertyValue_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+      setPropertyValue_result typedOther = (setPropertyValue_result)other;
+
+      return 0;
+    }
+
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(TProtocol iprot) throws TException {
+      TField field;
+      iprot.readStructBegin();
+      while (true)
+      {
+        field = iprot.readFieldBegin();
+        if (field.type == TType.STOP) { 
+          break;
+        }
+        switch (field.id) {
+          default:
+            TProtocolUtil.skip(iprot, field.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      validate();
+    }
+
+    public void write(TProtocol oprot) throws TException {
+      oprot.writeStructBegin(STRUCT_DESC);
+
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder("setPropertyValue_result(");
+      boolean first = true;
+
       sb.append(")");
       return sb.toString();
     }

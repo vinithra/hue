@@ -20,9 +20,11 @@ package org.apache.hadoop.mapred;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
@@ -38,6 +40,14 @@ import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
@@ -1265,21 +1275,21 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
           });
         }
 
-        public String getPropertyValue(String property) {
-          return conf.get(property, " ");
+        public String getPropertyValue(String propertyName) {
+          return conf.get(propertyName, " ");
         }
 
-        public void setPropertyValue(String property, String value) {
-          conf.set(property, value);
+        public synchronized void setPropertyValue(String propertyName, String value) {
+          conf.set(propertyName, value);
           conf.reloadConfiguration();
 
           String resource;
-          if (property.equals(MAPRED_ACLS_ENABLED) || property.equals(MAPREDUCE_JOB_ACL_MODIFY_JOB) || property.equals(MAPREDUCE_JOB_ACL_VIEW_JOB)) {
+          if (propertyName.equals(MAPRED_ACLS_ENABLED) || propertyName.equals(MAPREDUCE_JOB_ACL_MODIFY_JOB) || propertyName.equals(MAPREDUCE_JOB_ACL_VIEW_JOB)) {
             resource = "mapred-job-acls.xml";
-          } else if (property.contains("mapred.queue") && (property.contains("acl-administer-job") || property.contains("acl-submit-job"))) {
+          } else if (propertyName.contains("mapred.queue") && (propertyName.contains("acl-administer-job") || propertyName.contains("acl-submit-job"))) {
             resource = "mapred-queue-acls.xml";
           } else {
-            throw new RuntimeException("No resource found for property " + property);
+            throw new RuntimeException("No resource found for property " + propertyName);
           }
 
           try {
@@ -1298,12 +1308,57 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
                       + ":" + e,
                       e);
             }
+
             DocumentBuilder builder = docBuilderFactory.newDocumentBuilder();
             Document doc = null;
-            Element root = null;
 
+            URL url = conf.getResource(resource);
+            if (url != null) {
+              LOG.info("parsing " + url);
+              doc = builder.parse(url.toString());
+            }
 
-          } catch (IOException e) {
+            if (doc == null) {
+              throw new RuntimeException(resource + " not found");
+            }
+
+            Element root = doc.getDocumentElement();
+            if (!"configuration".equals(root.getTagName())) {
+              LOG.fatal("bad conf file: top-level element not <configuration>");
+            }
+
+            NodeList props = root.getChildNodes();
+            for (int i = 0; i < props.getLength(); i++) {
+              Node propNode = props.item(i);
+              Element prop = (Element)propNode;
+              if (!"property".equals(prop.getTagName())) {
+                LOG.warn("bad conf file: element not <property>");
+                continue;
+              }
+
+              Node nodeName = prop.getElementsByTagName("name").item(0);
+              if (((Element)nodeName).getNodeValue().equals(propertyName)) {
+                Node nodeValue = prop.getElementsByTagName("value").item(0);
+                Node newNodeValue = doc.createElement("value");
+                newNodeValue.setNodeValue(value);
+                propNode.replaceChild(newNodeValue, nodeValue);
+                writeDOMToFile(doc, url);
+                return;
+              }
+            }
+
+            // Property has not been found. Create a new one
+            Node newProp = doc.createElement("property");
+            Node newPropName = doc.createElement("name");
+            Node newPropValue = doc.createElement("value");
+            newPropName.setNodeValue(propertyName);
+            newPropValue.setNodeValue(value);
+            newProp.appendChild(newPropName);
+            newProp.appendChild(newPropValue);
+            root.appendChild(newProp);
+
+            writeDOMToFile(doc, url);
+          } catch (java.io.IOException e) {
             LOG.fatal("error parsing conf file: " + e);
             throw new RuntimeException(e);
           } catch (DOMException e) {
@@ -1317,6 +1372,24 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
             throw new RuntimeException(e);
           }
         }
+    }
+
+    public void writeDOMToFile(Document doc, URL url) {
+      try {
+        // Prepare the DOM document for writing
+        Source source = new DOMSource(doc);
+
+        // Prepare the output file
+        File file = new File(url.getPath());
+        Result result = new StreamResult(file);
+
+        // Write the DOM document to the file
+        Transformer xformer = TransformerFactory.newInstance().newTransformer();
+        xformer.transform(source, result);
+      } catch (TransformerException e) {
+        LOG.fatal("error writing DOM to conf file: " + e);
+        throw new RuntimeException(e);
+      }
     }
 
     /** Implementation of configurable interface */

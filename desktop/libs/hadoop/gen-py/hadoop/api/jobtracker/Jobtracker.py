@@ -256,6 +256,21 @@ class Iface(hadoop.api.common.HadoopServiceBase.Iface):
     """
     pass
 
+  def getPropertyValue(self, property):
+    """
+    Parameters:
+     - property
+    """
+    pass
+
+  def setPropertyValue(self, property, value):
+    """
+    Parameters:
+     - property
+     - value
+    """
+    pass
+
 
 class Client(hadoop.api.common.HadoopServiceBase.Client, Iface):
   """
@@ -1098,6 +1113,66 @@ class Client(hadoop.api.common.HadoopServiceBase.Client, Iface):
       raise result.err
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getDelegationToken failed: unknown result");
 
+  def getPropertyValue(self, property):
+    """
+    Parameters:
+     - property
+    """
+    self.send_getPropertyValue(property)
+    return self.recv_getPropertyValue()
+
+  def send_getPropertyValue(self, property):
+    self._oprot.writeMessageBegin('getPropertyValue', TMessageType.CALL, self._seqid)
+    args = getPropertyValue_args()
+    args.property = property
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getPropertyValue(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getPropertyValue_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success != None:
+      return result.success
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getPropertyValue failed: unknown result");
+
+  def setPropertyValue(self, property, value):
+    """
+    Parameters:
+     - property
+     - value
+    """
+    self.send_setPropertyValue(property, value)
+    self.recv_setPropertyValue()
+
+  def send_setPropertyValue(self, property, value):
+    self._oprot.writeMessageBegin('setPropertyValue', TMessageType.CALL, self._seqid)
+    args = setPropertyValue_args()
+    args.property = property
+    args.value = value
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_setPropertyValue(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = setPropertyValue_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    return
+
 
 class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor):
   def __init__(self, handler):
@@ -1126,6 +1201,8 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     self._processMap["killTaskAttempt"] = Processor.process_killTaskAttempt
     self._processMap["setJobPriority"] = Processor.process_setJobPriority
     self._processMap["getDelegationToken"] = Processor.process_getDelegationToken
+    self._processMap["getPropertyValue"] = Processor.process_getPropertyValue
+    self._processMap["setPropertyValue"] = Processor.process_setPropertyValue
 
   def process(self, iprot, oprot):
     (name, type, seqid) = iprot.readMessageBegin()
@@ -1448,6 +1525,28 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     except hadoop.api.common.ttypes.IOException, err:
       result.err = err
     oprot.writeMessageBegin("getDelegationToken", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_getPropertyValue(self, seqid, iprot, oprot):
+    args = getPropertyValue_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getPropertyValue_result()
+    result.success = self._handler.getPropertyValue(args.property)
+    oprot.writeMessageBegin("getPropertyValue", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_setPropertyValue(self, seqid, iprot, oprot):
+    args = setPropertyValue_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = setPropertyValue_result()
+    self._handler.setPropertyValue(args.property, args.value)
+    oprot.writeMessageBegin("setPropertyValue", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -4896,6 +4995,235 @@ class getDelegationToken_result(object):
       oprot.writeFieldBegin('err', TType.STRUCT, 1)
       self.err.write(oprot)
       oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getPropertyValue_args(object):
+  """
+  Attributes:
+   - property
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'property', None, None, ), # 1
+  )
+
+  def __init__(self, property=None,):
+    self.property = property
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.property = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getPropertyValue_args')
+    if self.property != None:
+      oprot.writeFieldBegin('property', TType.STRING, 1)
+      oprot.writeString(self.property)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getPropertyValue_result(object):
+  """
+  Attributes:
+   - success
+  """
+
+  thrift_spec = (
+    (0, TType.STRING, 'success', None, None, ), # 0
+  )
+
+  def __init__(self, success=None,):
+    self.success = success
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.STRING:
+          self.success = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getPropertyValue_result')
+    if self.success != None:
+      oprot.writeFieldBegin('success', TType.STRING, 0)
+      oprot.writeString(self.success)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class setPropertyValue_args(object):
+  """
+  Attributes:
+   - property
+   - value
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'property', None, None, ), # 1
+    (2, TType.STRING, 'value', None, None, ), # 2
+  )
+
+  def __init__(self, property=None, value=None,):
+    self.property = property
+    self.value = value
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.property = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.value = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('setPropertyValue_args')
+    if self.property != None:
+      oprot.writeFieldBegin('property', TType.STRING, 1)
+      oprot.writeString(self.property)
+      oprot.writeFieldEnd()
+    if self.value != None:
+      oprot.writeFieldBegin('value', TType.STRING, 2)
+      oprot.writeString(self.value)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+    def validate(self):
+      return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class setPropertyValue_result(object):
+
+  thrift_spec = (
+  )
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('setPropertyValue_result')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
     def validate(self):
