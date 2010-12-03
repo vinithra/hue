@@ -1280,9 +1280,6 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
         }
 
         public synchronized void setPropertyValue(String propertyName, String value) {
-          conf.set(propertyName, value);
-          conf.reloadConfiguration();
-
           String resource;
           if (propertyName.equals(MAPRED_ACLS_ENABLED) || propertyName.equals(MAPREDUCE_JOB_ACL_MODIFY_JOB) || propertyName.equals(MAPREDUCE_JOB_ACL_VIEW_JOB)) {
             resource = "mapred-job-acls.xml";
@@ -1348,6 +1345,11 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
                 propNode.replaceChild(newNodeValue, nodeValue);
                 LOG.info("Replacing value of property " + propertyName + " from " + nodeValue.getTextContent() + " to " + value);
                 writeDOMToFile(doc, url);
+                conf.set(propertyName, value);
+                conf.reloadConfiguration();
+                if (resource.equals("mapred-queue-acls.xml")) {
+                  jobTracker.refreshQueueAcls();
+                }
                 return;
               }
             }
@@ -1363,6 +1365,11 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
             root.appendChild(newProp);
 
             writeDOMToFile(doc, url);
+            conf.set(propertyName, value);
+            conf.reloadConfiguration();
+            if (resource.equals("mapred-queue-acls.xml")) {
+              jobTracker.refreshQueueAcls();
+            }
           } catch (java.io.IOException e) {
             LOG.fatal("error parsing conf file: " + e);
             throw new RuntimeException(e);
