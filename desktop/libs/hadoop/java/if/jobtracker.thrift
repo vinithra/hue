@@ -476,7 +476,7 @@ service Jobtracker extends common.HadoopServiceBase {
 
   string getPropertyValue(1:string property)
 
-  void setPropertyValue(1: string property, 2: string value)
+  void setPropertyValue(10: common.RequestContext ctx, 1: string property, 2: string value)
 }
 
 

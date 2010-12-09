@@ -223,7 +223,7 @@ public class Jobtracker {
 
     public String getPropertyValue(String property) throws TException;
 
-    public void setPropertyValue(String property, String value) throws TException;
+    public void setPropertyValue(org.apache.hadoop.thriftfs.api.RequestContext ctx, String property, String value) throws TException;
 
   }
 
@@ -279,7 +279,7 @@ public class Jobtracker {
 
     public void getPropertyValue(String property, AsyncMethodCallback<AsyncClient.getPropertyValue_call> resultHandler) throws TException;
 
-    public void setPropertyValue(String property, String value, AsyncMethodCallback<AsyncClient.setPropertyValue_call> resultHandler) throws TException;
+    public void setPropertyValue(org.apache.hadoop.thriftfs.api.RequestContext ctx, String property, String value, AsyncMethodCallback<AsyncClient.setPropertyValue_call> resultHandler) throws TException;
 
   }
 
@@ -1264,16 +1264,17 @@ public class Jobtracker {
       throw new TApplicationException(TApplicationException.MISSING_RESULT, "getPropertyValue failed: unknown result");
     }
 
-    public void setPropertyValue(String property, String value) throws TException
+    public void setPropertyValue(org.apache.hadoop.thriftfs.api.RequestContext ctx, String property, String value) throws TException
     {
-      send_setPropertyValue(property, value);
+      send_setPropertyValue(ctx, property, value);
       recv_setPropertyValue();
     }
 
-    public void send_setPropertyValue(String property, String value) throws TException
+    public void send_setPropertyValue(org.apache.hadoop.thriftfs.api.RequestContext ctx, String property, String value) throws TException
     {
       oprot_.writeMessageBegin(new TMessage("setPropertyValue", TMessageType.CALL, ++seqid_));
       setPropertyValue_args args = new setPropertyValue_args();
+      args.setCtx(ctx);
       args.setProperty(property);
       args.setValue(value);
       args.write(oprot_);
@@ -2145,17 +2146,19 @@ public class Jobtracker {
       }
     }
 
-    public void setPropertyValue(String property, String value, AsyncMethodCallback<setPropertyValue_call> resultHandler) throws TException {
+    public void setPropertyValue(org.apache.hadoop.thriftfs.api.RequestContext ctx, String property, String value, AsyncMethodCallback<setPropertyValue_call> resultHandler) throws TException {
       checkReady();
-      setPropertyValue_call method_call = new setPropertyValue_call(property, value, resultHandler, this, protocolFactory, transport);
+      setPropertyValue_call method_call = new setPropertyValue_call(ctx, property, value, resultHandler, this, protocolFactory, transport);
       manager.call(method_call);
     }
 
     public static class setPropertyValue_call extends TAsyncMethodCall {
+      private org.apache.hadoop.thriftfs.api.RequestContext ctx;
       private String property;
       private String value;
-      public setPropertyValue_call(String property, String value, AsyncMethodCallback<setPropertyValue_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
+      public setPropertyValue_call(org.apache.hadoop.thriftfs.api.RequestContext ctx, String property, String value, AsyncMethodCallback<setPropertyValue_call> resultHandler, TAsyncClient client, TProtocolFactory protocolFactory, TNonblockingTransport transport) throws TException {
         super(client, protocolFactory, transport, resultHandler, false);
+        this.ctx = ctx;
         this.property = property;
         this.value = value;
       }
@@ -2163,6 +2166,7 @@ public class Jobtracker {
       public void write_args(TProtocol prot) throws TException {
         prot.writeMessageBegin(new TMessage("setPropertyValue", TMessageType.CALL, 0));
         setPropertyValue_args args = new setPropertyValue_args();
+        args.setCtx(ctx);
         args.setProperty(property);
         args.setValue(value);
         args.write(prot);
@@ -3057,7 +3061,7 @@ public class Jobtracker {
         }
         iprot.readMessageEnd();
         setPropertyValue_result result = new setPropertyValue_result();
-        iface_.setPropertyValue(args.property, args.value);
+        iface_.setPropertyValue(args.ctx, args.property, args.value);
         oprot.writeMessageBegin(new TMessage("setPropertyValue", TMessageType.REPLY, seqid));
         result.write(oprot);
         oprot.writeMessageEnd();
@@ -20081,14 +20085,17 @@ public class Jobtracker {
   public static class setPropertyValue_args implements TBase<setPropertyValue_args, setPropertyValue_args._Fields>, java.io.Serializable, Cloneable   {
     private static final TStruct STRUCT_DESC = new TStruct("setPropertyValue_args");
 
+    private static final TField CTX_FIELD_DESC = new TField("ctx", TType.STRUCT, (short)10);
     private static final TField PROPERTY_FIELD_DESC = new TField("property", TType.STRING, (short)1);
     private static final TField VALUE_FIELD_DESC = new TField("value", TType.STRING, (short)2);
 
+    public org.apache.hadoop.thriftfs.api.RequestContext ctx;
     public String property;
     public String value;
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements TFieldIdEnum {
+      CTX((short)10, "ctx"),
       PROPERTY((short)1, "property"),
       VALUE((short)2, "value");
 
@@ -20105,6 +20112,8 @@ public class Jobtracker {
        */
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
+          case 10: // CTX
+            return CTX;
           case 1: // PROPERTY
             return PROPERTY;
           case 2: // VALUE
@@ -20153,6 +20162,8 @@ public class Jobtracker {
     public static final Map<_Fields, FieldMetaData> metaDataMap;
     static {
       Map<_Fields, FieldMetaData> tmpMap = new EnumMap<_Fields, FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.CTX, new FieldMetaData("ctx", TFieldRequirementType.DEFAULT, 
+          new StructMetaData(TType.STRUCT, org.apache.hadoop.thriftfs.api.RequestContext.class)));
       tmpMap.put(_Fields.PROPERTY, new FieldMetaData("property", TFieldRequirementType.DEFAULT, 
           new FieldValueMetaData(TType.STRING)));
       tmpMap.put(_Fields.VALUE, new FieldMetaData("value", TFieldRequirementType.DEFAULT, 
@@ -20165,10 +20176,12 @@ public class Jobtracker {
     }
 
     public setPropertyValue_args(
+      org.apache.hadoop.thriftfs.api.RequestContext ctx,
       String property,
       String value)
     {
       this();
+      this.ctx = ctx;
       this.property = property;
       this.value = value;
     }
@@ -20177,6 +20190,9 @@ public class Jobtracker {
      * Performs a deep copy on <i>other</i>.
      */
     public setPropertyValue_args(setPropertyValue_args other) {
+      if (other.isSetCtx()) {
+        this.ctx = new org.apache.hadoop.thriftfs.api.RequestContext(other.ctx);
+      }
       if (other.isSetProperty()) {
         this.property = other.property;
       }
@@ -20191,8 +20207,33 @@ public class Jobtracker {
 
     @Override
     public void clear() {
+      this.ctx = null;
       this.property = null;
       this.value = null;
+    }
+
+    public org.apache.hadoop.thriftfs.api.RequestContext getCtx() {
+      return this.ctx;
+    }
+
+    public setPropertyValue_args setCtx(org.apache.hadoop.thriftfs.api.RequestContext ctx) {
+      this.ctx = ctx;
+      return this;
+    }
+
+    public void unsetCtx() {
+      this.ctx = null;
+    }
+
+    /** Returns true if field ctx is set (has been asigned a value) and false otherwise */
+    public boolean isSetCtx() {
+      return this.ctx != null;
+    }
+
+    public void setCtxIsSet(boolean value) {
+      if (!value) {
+        this.ctx = null;
+      }
     }
 
     public String getProperty() {
@@ -20245,6 +20286,14 @@ public class Jobtracker {
 
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
+      case CTX:
+        if (value == null) {
+          unsetCtx();
+        } else {
+          setCtx((org.apache.hadoop.thriftfs.api.RequestContext)value);
+        }
+        break;
+
       case PROPERTY:
         if (value == null) {
           unsetProperty();
@@ -20266,6 +20315,9 @@ public class Jobtracker {
 
     public Object getFieldValue(_Fields field) {
       switch (field) {
+      case CTX:
+        return getCtx();
+
       case PROPERTY:
         return getProperty();
 
@@ -20283,6 +20335,8 @@ public class Jobtracker {
       }
 
       switch (field) {
+      case CTX:
+        return isSetCtx();
       case PROPERTY:
         return isSetProperty();
       case VALUE:
@@ -20303,6 +20357,15 @@ public class Jobtracker {
     public boolean equals(setPropertyValue_args that) {
       if (that == null)
         return false;
+
+      boolean this_present_ctx = true && this.isSetCtx();
+      boolean that_present_ctx = true && that.isSetCtx();
+      if (this_present_ctx || that_present_ctx) {
+        if (!(this_present_ctx && that_present_ctx))
+          return false;
+        if (!this.ctx.equals(that.ctx))
+          return false;
+      }
 
       boolean this_present_property = true && this.isSetProperty();
       boolean that_present_property = true && that.isSetProperty();
@@ -20338,6 +20401,16 @@ public class Jobtracker {
       int lastComparison = 0;
       setPropertyValue_args typedOther = (setPropertyValue_args)other;
 
+      lastComparison = Boolean.valueOf(isSetCtx()).compareTo(typedOther.isSetCtx());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetCtx()) {
+        lastComparison = TBaseHelper.compareTo(this.ctx, typedOther.ctx);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
       lastComparison = Boolean.valueOf(isSetProperty()).compareTo(typedOther.isSetProperty());
       if (lastComparison != 0) {
         return lastComparison;
@@ -20375,6 +20448,14 @@ public class Jobtracker {
           break;
         }
         switch (field.id) {
+          case 10: // CTX
+            if (field.type == TType.STRUCT) {
+              this.ctx = new org.apache.hadoop.thriftfs.api.RequestContext();
+              this.ctx.read(iprot);
+            } else { 
+              TProtocolUtil.skip(iprot, field.type);
+            }
+            break;
           case 1: // PROPERTY
             if (field.type == TType.STRING) {
               this.property = iprot.readString();
@@ -20414,6 +20495,11 @@ public class Jobtracker {
         oprot.writeString(this.value);
         oprot.writeFieldEnd();
       }
+      if (this.ctx != null) {
+        oprot.writeFieldBegin(CTX_FIELD_DESC);
+        this.ctx.write(oprot);
+        oprot.writeFieldEnd();
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -20423,6 +20509,14 @@ public class Jobtracker {
       StringBuilder sb = new StringBuilder("setPropertyValue_args(");
       boolean first = true;
 
+      sb.append("ctx:");
+      if (this.ctx == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.ctx);
+      }
+      first = false;
+      if (!first) sb.append(", ");
       sb.append("property:");
       if (this.property == null) {
         sb.append("null");

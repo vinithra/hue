@@ -383,8 +383,8 @@ class LiveJobTracker(object):
     # principal, which doesn't exist yet. Todd's working on that.
     return self.client.getDelegationToken(self.thread_local.request_context, 'hadoop')
 
-  def get_property_value(self, property):
-    return self.client.getPropertyValue(property)
+  def get_property_value(self, propertyName):
+    return self.client.getPropertyValue(propertyName)
 
-  def set_property_value(self, property, value):
-    return self.client.setPropertyValue(property, value)
+  def set_property_value(self, propertyName, propertyValue):
+    return self.client.setPropertyValue(self.thread_local.request_context, propertyName, propertyValue)

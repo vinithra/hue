@@ -20,9 +20,7 @@ package org.apache.hadoop.mapred;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.security.PrivilegedAction;
@@ -43,19 +41,16 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-//import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
 import org.apache.commons.logging.Log;
@@ -63,7 +58,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.security.token.delegation.DelegationTokenIdentifier;
-import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Counters.Counter;
 import org.apache.hadoop.mapred.Counters.Group;
@@ -71,8 +65,6 @@ import org.apache.hadoop.mapred.JobTracker.State;
 import org.apache.hadoop.mapred.TaskStatus.Phase;
 import org.apache.hadoop.mapreduce.TaskType;
 import org.apache.hadoop.net.NetUtils;
-import org.apache.hadoop.security.Credentials;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.thriftfs.ThriftHandlerBase;
 import org.apache.hadoop.thriftfs.ThriftPluginServer;
@@ -682,6 +674,8 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
     public static final String MAPREDUCE_JOB_ACL_VIEW_JOB = "mapreduce.job.acl-view-job";
     public static final String MAPREDUCE_JOB_ACL_MODIFY_JOB = "mapreduce.job.acl-modify-job";
     public static final String MAPRED_ACLS_ENABLED = "mapred.acls.enabled";
+    public static final String MAPRED_JOB_ACLS_XML = "mapred-job-acls.xml";
+    public static final String MAPRED_QUEUE_ACLS_XML = "mapred-queue-acls.xml";
 
     private ThriftPluginServer thriftServer;
 
@@ -1279,20 +1273,9 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
           return conf.get(propertyName, " ");
         }
 
-        public synchronized void setPropertyValue(String propertyName, String value) {
-          String resource;
-          if (propertyName.equals(MAPRED_ACLS_ENABLED) || propertyName.equals(MAPREDUCE_JOB_ACL_MODIFY_JOB) || propertyName.equals(MAPREDUCE_JOB_ACL_VIEW_JOB)) {
-            resource = "mapred-job-acls.xml";
-          } else if (propertyName.contains("mapred.queue") && (propertyName.contains("acl-administer-job") || propertyName.contains("acl-submit-job"))) {
-            resource = "mapred-queue-acls.xml";
-          } else {
-            throw new RuntimeException("No resource found for property " + propertyName);
-          }
-
+        public synchronized void setPropertyValue(RequestContext ctx, String propertyName, String propertyValue) {
           try {
-            DocumentBuilderFactory docBuilderFactory
-              = DocumentBuilderFactory.newInstance();
-            //ignore all comments inside the xml file
+            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
             docBuilderFactory.setIgnoringComments(true);
 
             //allow includes in the xml file
@@ -1301,17 +1284,26 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
                 docBuilderFactory.setXIncludeAware(true);
             } catch (UnsupportedOperationException e) {
               LOG.error("Failed to set setXIncludeAware(true) for parser "
-                      + docBuilderFactory
-                      + ":" + e,
-                      e);
+                      + docBuilderFactory + ":" + e, e);
             }
 
             DocumentBuilder builder = docBuilderFactory.newDocumentBuilder();
             Document doc = null;
 
+            String resource;
+            if (propertyName.equals(MAPRED_ACLS_ENABLED) ||
+                propertyName.equals(MAPREDUCE_JOB_ACL_MODIFY_JOB) ||
+                propertyName.equals(MAPREDUCE_JOB_ACL_VIEW_JOB)) {
+              resource = MAPRED_JOB_ACLS_XML;
+            } else if (propertyName.matches("^mapred\\.queue\\.[a-zA-Z0-9]+\\.acl-(administer|submit)-job$")) {
+              resource = MAPRED_QUEUE_ACLS_XML;
+            } else {
+              throw new RuntimeException("Disallowing modification of resource for property " + propertyName);
+            }
+
             URL url = conf.getResource(resource);
             if (url != null) {
-              LOG.info("parsing " + url);
+              LOG.debug("Parsing " + url);
               doc = builder.parse(url.toString());
             }
 
@@ -1321,7 +1313,7 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
 
             Element root = doc.getDocumentElement();
             if (!"configuration".equals(root.getTagName())) {
-              LOG.fatal("bad conf file: top-level element not <configuration>");
+              LOG.debug("Bad conf file: top-level element not <configuration>");
             }
 
             NodeList props = root.getChildNodes();
@@ -1331,24 +1323,27 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
                 continue;
 
               Element prop = (Element)propNode;
-              if (!"property".equals(prop.getTagName())) {
-                LOG.warn("bad conf file: element not <property>");
+              if (!prop.getTagName().equals("property")) {
+                LOG.debug("Bad conf file: element not <property>");
                 continue;
               }
 
               Node nodeName = prop.getElementsByTagName("name").item(0);
-              LOG.info("nodeName value:"+((Element)nodeName).getTextContent());
               if (((Element)nodeName).getTextContent().equals(propertyName)) {
                 Node nodeValue = prop.getElementsByTagName("value").item(0);
                 Node newNodeValue = doc.createElement("value");
-                newNodeValue.setTextContent(value);
+                newNodeValue.setTextContent(propertyValue);
                 propNode.replaceChild(newNodeValue, nodeValue);
-                LOG.info("Replacing value of property " + propertyName + " from " + nodeValue.getTextContent() + " to " + value);
+                LOG.info("Replacing value of property " + propertyName + " from " + nodeValue.getTextContent() + " to " + propertyValue);
                 writeDOMToFile(doc, url);
-                conf.set(propertyName, value);
-                conf.reloadConfiguration();
-                if (resource.equals("mapred-queue-acls.xml")) {
-                  jobTracker.refreshQueueAcls();
+                refreshACLs(propertyName, propertyValue, resource, ctx);
+                if (resource.equals(MAPRED_QUEUE_ACLS_XML)) {
+                  assumeUserContextAndExecute(ctx, new PrivilegedExceptionAction<Void>() {
+                    public Void run() throws java.io.IOException {
+                      jobTracker.refreshQueueAcls();
+                      return null;
+                    }
+                  });
                 }
                 return;
               }
@@ -1358,17 +1353,22 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
             Node newProp = doc.createElement("property");
             Node newPropName = doc.createElement("name");
             Node newPropValue = doc.createElement("value");
-            newPropName.setNodeValue(propertyName);
-            newPropValue.setNodeValue(value);
+            newPropName.appendChild(doc.createTextNode(propertyName));
+            newPropValue.appendChild(doc.createTextNode(propertyValue));
             newProp.appendChild(newPropName);
             newProp.appendChild(newPropValue);
             root.appendChild(newProp);
+            LOG.info("Adding property " + propertyName + " with value " + propertyValue);
 
             writeDOMToFile(doc, url);
-            conf.set(propertyName, value);
-            conf.reloadConfiguration();
-            if (resource.equals("mapred-queue-acls.xml")) {
-              jobTracker.refreshQueueAcls();
+            refreshACLs(propertyName, propertyValue, resource, ctx);
+            if (resource.equals(MAPRED_QUEUE_ACLS_XML)) {
+              assumeUserContextAndExecute(ctx, new PrivilegedExceptionAction<Void>() {
+                public Void run() throws java.io.IOException {
+                  jobTracker.refreshQueueAcls();
+                  return null;
+                }
+              });
             }
           } catch (java.io.IOException e) {
             LOG.fatal("error parsing conf file: " + e);
@@ -1382,8 +1382,16 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
           } catch (ParserConfigurationException e) {
             LOG.fatal("error parsing conf file: " + e);
             throw new RuntimeException(e);
+          } catch (IOException e) {
+            LOG.fatal("error refreshing ACLs: " + e);
+            throw new RuntimeException(e);
           }
         }
+    }
+
+    public void refreshACLs(String propertyName, String propertyValue, String resource, RequestContext ctx) {
+      conf.reloadConfiguration();
+      conf.set(propertyName, propertyValue);
     }
 
     public void writeDOMToFile(Document doc, URL url) {
@@ -1391,7 +1399,6 @@ public class ThriftJobTrackerPlugin extends JobTrackerPlugin implements Configur
         // Prepare the DOM document for writing
         Source source = new DOMSource(doc);
 
-        // Prepare the output file
         File file = new File(url.getPath());
         Result result = new StreamResult(file);
 

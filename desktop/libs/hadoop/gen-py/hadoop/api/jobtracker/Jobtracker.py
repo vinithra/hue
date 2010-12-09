@@ -263,9 +263,10 @@ class Iface(hadoop.api.common.HadoopServiceBase.Iface):
     """
     pass
 
-  def setPropertyValue(self, property, value):
+  def setPropertyValue(self, ctx, property, value):
     """
     Parameters:
+     - ctx
      - property
      - value
     """
@@ -1143,18 +1144,20 @@ class Client(hadoop.api.common.HadoopServiceBase.Client, Iface):
       return result.success
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getPropertyValue failed: unknown result");
 
-  def setPropertyValue(self, property, value):
+  def setPropertyValue(self, ctx, property, value):
     """
     Parameters:
+     - ctx
      - property
      - value
     """
-    self.send_setPropertyValue(property, value)
+    self.send_setPropertyValue(ctx, property, value)
     self.recv_setPropertyValue()
 
-  def send_setPropertyValue(self, property, value):
+  def send_setPropertyValue(self, ctx, property, value):
     self._oprot.writeMessageBegin('setPropertyValue', TMessageType.CALL, self._seqid)
     args = setPropertyValue_args()
+    args.ctx = ctx
     args.property = property
     args.value = value
     args.write(self._oprot)
@@ -1545,7 +1548,7 @@ class Processor(hadoop.api.common.HadoopServiceBase.Processor, Iface, TProcessor
     args.read(iprot)
     iprot.readMessageEnd()
     result = setPropertyValue_result()
-    self._handler.setPropertyValue(args.property, args.value)
+    self._handler.setPropertyValue(args.ctx, args.property, args.value)
     oprot.writeMessageBegin("setPropertyValue", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
@@ -5132,6 +5135,7 @@ class getPropertyValue_result(object):
 class setPropertyValue_args(object):
   """
   Attributes:
+   - ctx
    - property
    - value
   """
@@ -5140,9 +5144,18 @@ class setPropertyValue_args(object):
     None, # 0
     (1, TType.STRING, 'property', None, None, ), # 1
     (2, TType.STRING, 'value', None, None, ), # 2
+    None, # 3
+    None, # 4
+    None, # 5
+    None, # 6
+    None, # 7
+    None, # 8
+    None, # 9
+    (10, TType.STRUCT, 'ctx', (hadoop.api.common.ttypes.RequestContext, hadoop.api.common.ttypes.RequestContext.thrift_spec), None, ), # 10
   )
 
-  def __init__(self, property=None, value=None,):
+  def __init__(self, ctx=None, property=None, value=None,):
+    self.ctx = ctx
     self.property = property
     self.value = value
 
@@ -5155,7 +5168,13 @@ class setPropertyValue_args(object):
       (fname, ftype, fid) = iprot.readFieldBegin()
       if ftype == TType.STOP:
         break
-      if fid == 1:
+      if fid == 10:
+        if ftype == TType.STRUCT:
+          self.ctx = hadoop.api.common.ttypes.RequestContext()
+          self.ctx.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
         if ftype == TType.STRING:
           self.property = iprot.readString();
         else:
@@ -5182,6 +5201,10 @@ class setPropertyValue_args(object):
     if self.value != None:
       oprot.writeFieldBegin('value', TType.STRING, 2)
       oprot.writeString(self.value)
+      oprot.writeFieldEnd()
+    if self.ctx != None:
+      oprot.writeFieldBegin('ctx', TType.STRUCT, 10)
+      self.ctx.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
