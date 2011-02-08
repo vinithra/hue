@@ -32,7 +32,7 @@ fi
 
 BEESWAX_ROOT=$(dirname $0)
 BEESWAX_JAR=$BEESWAX_ROOT/java-lib/BeeswaxServer.jar
-BEESWAX_HIVE_LIB=$BEESWAX_ROOT/hive/lib
+#BEESWAX_HIVE_LIB=$BEESWAX_ROOT/hive/lib
 
 echo \$HADOOP_HOME=$HADOOP_HOME
 
@@ -56,7 +56,10 @@ fi
 if [ -f $HADOOP_CONF_DIR/hadoop-env.sh ]; then
   . $HADOOP_CONF_DIR/hadoop-env.sh
 fi
-export HADOOP_CONF_DIR=$HIVE_CONF_DIR:${BEESWAX_HIVE_LIB}/hive-default-xml-0.6.0.jar:${HADOOP_CONF_DIR}:$(find $BEESWAX_HIVE_LIB -name "thrift-fb303-0.5.0.jar" | head -1)
+#export HADOOP_CONF_DIR=$HIVE_CONF_DIR:${HADOOP_CONF_DIR}:$(find $BEESWAX_HIVE_LIB -name "thrift-fb303-0.5.0.jar" | head -1)
+# Include desktop/conf.dist for log4j.properties file here or in
+# hadoop_classpath
+export HADOOP_CONF_DIR=$HIVE_CONF_DIR:${HADOOP_CONF_DIR}
 echo \$HADOOP_CONF_DIR=$HADOOP_CONF_DIR
 
 # Note: I've had trouble running this with just "java -jar" with the classpath
