@@ -56,6 +56,13 @@ BEESWAX_SERVER_HEAPSIZE = Config(
     "may override this setting.",
   default="1000")
 
+BEESWAX_HIVE_HOME_DIR = Config(
+  key="hive_home_dir",
+  default=os.environ.get("HIVE_HOME", "/usr/lib/hive"),
+  help=("Path to directory holding hive libs; " +
+        "defaults to environment variable when not set.")
+)
+
 BEESWAX_HIVE_CONF_DIR = Config(
   key='hive_conf_dir',
   help='Hive configuration directory, where hive-site.xml is located',
