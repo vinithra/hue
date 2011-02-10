@@ -59,7 +59,7 @@ BEESWAX_SERVER_HEAPSIZE = Config(
 BEESWAX_HIVE_HOME_DIR = Config(
   key="hive_home_dir",
   default=os.environ.get("HIVE_HOME", "/usr/lib/hive"),
-  help=("Path to directory holding hive libs; " +
+  help=("Path to the root of the Hive installation; " +
         "defaults to environment variable when not set.")
 )
 

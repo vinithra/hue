@@ -44,7 +44,7 @@ BEESWAX_ROOT=$(dirname $0)
 BEESWAX_JAR=$BEESWAX_ROOT/java-lib/BeeswaxServer.jar
 HIVE_LIB=$HIVE_HOME/lib
 
-export HADOOP_CLASSPATH=$(find $HIVE_HOME/lib -name "*.jar" | tr "\n" :)
+export HADOOP_CLASSPATH=$(find $HIVE_LIB -name "*.jar" | tr "\n" :)
 
 if [ -n "$HADOOP_EXTRA_CLASSPATH_STRING" ]; then
   export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:$HADOOP_EXTRA_CLASSPATH_STRING
@@ -65,7 +65,7 @@ if [ -f $HADOOP_CONF_DIR/hadoop-env.sh ]; then
   . $HADOOP_CONF_DIR/hadoop-env.sh
 fi
 
-export HADOOP_CONF_DIR=$HIVE_CONF_DIR:$BEESWAX_ROOT/../../desktop/conf.dist:$HADOOP_CONF_DIR
+export HADOOP_CONF_DIR=$HIVE_CONF_DIR:$BEESWAX_ROOT/../../desktop/conf:$HADOOP_CONF_DIR
 echo \$HADOOP_CONF_DIR=$HADOOP_CONF_DIR
 
 # Note: I've had trouble running this with just "java -jar" with the classpath
