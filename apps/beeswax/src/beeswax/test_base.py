@@ -69,6 +69,7 @@ def _start_server(cluster):
     'HADOOP_HOME': hadoop.conf.HADOOP_HOME.get(),
     'HADOOP_CONF_DIR': cluster.config_dir,
     'HIVE_CONF_DIR': beeswax.conf.BEESWAX_HIVE_CONF_DIR.get(),
+    'HIVE_HOME' : beeswax.conf.BEESWAX_HIVE_HOME_DIR.get(),
     'HADOOP_EXTRA_CLASSPATH_STRING': hadoop.conf.HADOOP_EXTRA_CLASSPATH_STRING.get()
   }
   if os.getenv("JAVA_HOME"):
@@ -86,8 +87,6 @@ def get_shared_beeswax_server():
     beeswax.conf.BEESWAX_SERVER_PORT.set_for_testing(BEESWAXD_TEST_PORT),
     beeswax.conf.BEESWAX_META_SERVER_HOST.set_for_testing("localhost"),
     beeswax.conf.BEESWAX_META_SERVER_PORT.set_for_testing(BEESWAXD_TEST_PORT + 1),
-    # Use a bogus path to avoid loading the normal hive-site.xml
-    beeswax.conf.BEESWAX_HIVE_CONF_DIR.set_for_testing('/my/bogus/path'),
   )
 
   cluster = mini_cluster.shared_cluster(conf=True)
