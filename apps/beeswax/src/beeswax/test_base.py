@@ -28,6 +28,7 @@ import os
 import re
 import subprocess
 import time
+from shutil import copyfile
 
 import fb303.ttypes
 from nose.tools import assert_true, assert_false
@@ -82,14 +83,28 @@ def _start_server(cluster):
 
 
 def get_shared_beeswax_server():
+  # Copy hive-default.xml from BEESWAX_HIVE_CONF_DIR before it is set to
+  # /my/bogus/path
+  copyfile(beeswax.conf.BEESWAX_HIVE_CONF_DIR.get()+"/hive-default.xml",'/tmp/hive-default.xml')
+
   finish = (
     beeswax.conf.BEESWAX_SERVER_HOST.set_for_testing("localhost"),
     beeswax.conf.BEESWAX_SERVER_PORT.set_for_testing(BEESWAXD_TEST_PORT),
     beeswax.conf.BEESWAX_META_SERVER_HOST.set_for_testing("localhost"),
     beeswax.conf.BEESWAX_META_SERVER_PORT.set_for_testing(BEESWAXD_TEST_PORT + 1),
+    # Use a bogus path to avoid loading the normal hive-site.xml
+    beeswax.conf.BEESWAX_HIVE_CONF_DIR.set_for_testing('/my/bogus/path')
   )
 
   cluster = mini_cluster.shared_cluster(conf=True)
+
+  # Copy hive-default.xml into the mini_cluster's conf dir, which happens to be
+  # in the cluster's tmpdir. This tmpdir is determined during the mini_cluster
+  # startup, during which BEESWAX_HIVE_CONF_DIR needs to be set to
+  # /my/bogus/path. Hence the copying to a temporary location.
+  # hive-default.xml will get picked up by the beeswax_server during startup
+  copyfile("/tmp/hive-default.xml",
+           cluster.tmpdir+"/conf/hive-default.xml")
 
   global _SHARED_BEESWAX_SERVER_PROCESS
   if _SHARED_BEESWAX_SERVER_PROCESS is None:

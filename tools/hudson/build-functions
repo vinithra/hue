@@ -41,3 +41,24 @@ build_hadoop() {
   tar -C $HADOOP_DIR -xzf $CDH_CACHE
   export HADOOP_HOME="$HADOOP_DIR/${CDH_VERSION}"
 }
+
+HIVE_URL=${HVIE_URL:-http://nightly.cloudera.com/cdh/3/hive-0.6.0-CDH3-dev.tar.gz}
+
+HIVE_TGZ=${(basename $HIVE_URL)
+HIVE_VERSION=${HIVE_TGZ/.tar.gz/}
+HIVE_CACHE="$HOME/.hue_cache/${HIVE_TGZ}"
+
+build_hive() {
+  if [ ! -f $HOME/.hue_cache ]; then
+    mkdir -p $HOME/.hue_cache
+    echo "Downloading $HIVE_URL..."
+    wget $HIVE_URL -O $HIVE_CACHE
+  fi
+
+  HIVE_DIR=$HUE_ROOT/ext/hive
+
+  mkdir -p $HIVE_DIR
+  echo "Unpacking $HIVE_CACHE to $HIVE_DIR"
+  tar -C $HIVE_DIR -xzf $HIVE_CACHE
+  export HIVE_HOME="$HIVE_DIR/${HIVE_VERSION}"
+}
