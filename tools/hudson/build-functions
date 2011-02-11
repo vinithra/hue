@@ -41,9 +41,10 @@ build_hadoop() {
   tar -C $HADOOP_DIR -xzf $CDH_CACHE
   export HADOOP_HOME="$HADOOP_DIR/${CDH_VERSION}"
 }
+
 HIVE_URL=${HIVE_URL:-http://nightly.cloudera.com/debian/pool/contrib/h/hadoop-hive/hadoop-hive_0.6.0+15.orig.tar.gz}
 
-HIVE_TGZ=${(basename $HIVE_URL)
+HIVE_TGZ=$(basename $HIVE_URL)
 HIVE_VERSION=${HIVE_TGZ/.tar.gz/}
 HIVE_CACHE="$HOME/.hue_cache/${HIVE_TGZ}"
 
