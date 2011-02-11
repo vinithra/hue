@@ -61,4 +61,5 @@ build_hive() {
   echo "Unpacking $HIVE_CACHE to $HIVE_DIR"
   tar -C $HIVE_DIR -xzf $HIVE_CACHE
   export HIVE_HOME="$HIVE_DIR/${HIVE_VERSION}"
+  export HIVE_CONF_DIR="$HIVE_HOME/conf"
 }
