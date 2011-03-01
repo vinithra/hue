@@ -66,7 +66,7 @@ BEESWAX_HIVE_HOME_DIR = Config(
 BEESWAX_HIVE_CONF_DIR = Config(
   key='hive_conf_dir',
   help='Hive configuration directory, where hive-site.xml is located',
-  default=os.environ.get("HIVE_CONF_DIR", '/etc/hive/conf')
+  default=os.environ.get("HIVE_CONF_DIR", '/etc/hive/conf'))
 
 LOCAL_EXAMPLES_DATA_DIR = Config(
   key='local_examples_data_dir',
