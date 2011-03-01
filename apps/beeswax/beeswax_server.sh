@@ -26,19 +26,20 @@ fi
 
 echo \$HADOOP_HOME=$HADOOP_HOME
 
+if [ -z "$HIVE_CONF_DIR" ]; then
+  echo "\$HIVE_CONF_DIR must be specified" 1>&2
+  exit 1
+fi
+
+echo \$HIVE_CONF_DIR=$HIVE_CONF_DIR
+
 if [ -z "$HIVE_HOME" ]; then
-  echo "\$HIVE_HOME must be specified" 1>&2
+  echo "\$HIVE_HOME not specified. Defaulting to $HIVE_CONF_DIR/.." 1>&2
+  export HIVE_HOME=$HIVE_CONF_DIR/..
   exit 1
 fi
 
 echo \$HIVE_HOME=$HIVE_HOME
-
-if [ -z "$HIVE_CONF_DIR" ]; then
-  echo "\$HIVE_CONF_DIR not specified. Defaulting to $HIVE_HOME/lib" 1>&2
-  HIVE_CONF_DIR=$HIVE_HOME/conf
-fi
-
-echo \$HIVE_CONF_DIR=$HIVE_CONF_DIR
 
 
 BEESWAX_ROOT=$(dirname $0)
